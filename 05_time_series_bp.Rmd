@@ -1,0 +1,168 @@
+---
+title: "Time Series Analysis on Global Temperature Anomalies"
+date: 2023-07-14
+output: html_document
+---
+
+# Overview
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(tidytuesdayR)
+```
+
+# Load the Data
+
+Data is from NASA's Goddard Institute for Space Studies (GISS).
+
+The average global temperature on Earth are estimation of the temperature anomalies valued based on the temperature values in C° taken from 1951 to 1980. It is technically a time series analysis.
+
+```{r Load}
+tt <- tt_load("2023-07-11")
+```
+
+
+```{r Data_selection}
+global_temps <- tt$global_temps
+global_temps%>%head
+```
+
+The first step is to set up a dataframe customized as needed for the analysis.
+
+```{r}
+global_temps2 <- global_temps %>%
+  select(1:13) %>% # count(Year) 1880 - 2023
+  pivot_longer(cols = -Year)%>%
+  drop_na()%>%
+  group_by(Year)%>%
+  reframe(avg_val=mean(value))
+
+global_temps2 %>%head
+```
+
+Start building a time series dataframe with the help of the {fpp3} package.
+
+```{r}
+# install.packages("fpp3")
+library(fpp3)
+```
+
+```{r eval=FALSE}
+?tsibble()
+?as_tsibble
+```
+
+```{r}
+ts_gt <- global_temps2 %>% # names
+  as_tsibble(index=Year)
+
+ts_gt %>%head
+```
+
+```{r}
+autoplot(ts_gt)
+```
+
+
+Apply an ARIMA model.
+```{r}
+fit <- ts_gt %>%
+  model(ARIMA(avg_val~Year))
+```
+
+
+```{r}
+report(fit)
+```
+
+
+Let's predict the future:
+```{r}
+new_data <- new_data(ts_gt,n=5)
+
+fc <- fit |>
+  forecast(new_data = new_data)
+```
+
+```{r}
+fc |>
+  autoplot(ts_gt |> tail(100)) +
+  labs(title="Global temperature anomalies",
+       y = "Temperature variation", x = "Time [Year]")
+```
+
+Making a simple linear regression model with our data:
+```{r}
+global_temps %>%
+  select(1:13) %>% # count(Year) 1880 - 2023
+  pivot_longer(cols = -Year)%>%
+  ggplot(aes(x=Year,y=value,group=name,color=name))+
+  geom_line()+
+  scale_color_manual(values = RColorBrewer::brewer.pal(12,"Paired"))+
+  ggthemes::theme_fivethirtyeight()
+```
+In order to make credible linear model results, it might be important to split the data into training and testing sets.
+
+```{r}
+global_temps_lm_df <- global_temps %>%
+  select(1:13) %>% # count(Year) 1880 - 2023
+  pivot_longer(cols = -Year)
+```
+
+```{r}
+set.seed(1234)
+train_id <-  sample_frac(tibble(id=row_number(global_temps_lm_df)),0.8)
+training <- global_temps_lm_df[pull(train_id),]
+testing <-  global_temps_lm_df%>%anti_join(training)
+```
+
+```{r}
+training%>%head
+```
+
+
+```{r}
+fit<- lm(value ~ Year, data=training)
+summary(fit, show.intercept= FALSE)
+```
+
+```{r}
+broom::augment(fit)%>%
+  left_join(global_temps_lm_df,by=c("Year","value"))%>%
+  ggplot(aes(x=Year,value,group=name))+
+  geom_line(color="steelblue",linewidth=0.5)+
+  geom_line(aes(y=.fitted),inherit.aes = T)
+```
+
+```{r}
+new_data <- tibble(Year=c(2024,2025,2026,2027))
+
+predict(fit,new_data)
+```
+```{r}
+prediction<- tibble(Year=c(2024,2025,2026,2027),
+                    pred=predict(fit,
+                                 newdata = tibble(Year=c(2024,2025,2026,2027))))
+prediction
+```
+
+
+```{r}
+broom::augment(fit)%>%
+  left_join(global_temps_lm_df,by=c("Year","value"))%>%
+  ggplot(aes(x=Year,value))+
+  geom_line(aes(group=name),color="steelblue",linewidth=0.5)+
+  geom_line(aes(y=.fitted),inherit.aes = T)+
+  geom_line(data=prediction, mapping=aes(x=Year,y=pred),color="darkred")+
+  labs(title="Global Temperature Anomalies Time Series",
+  subtitle="Linear model prediction for the next 4 Years",
+  caption="DataSource: NASA's Goddard Institute for Space Studies (GISS)")+
+  ggthemes::theme_fivethirtyeight()
+```
+
+```{r}
+ggsave("images/05_ts_linear_model.png")
+```
+

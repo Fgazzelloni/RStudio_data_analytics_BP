@@ -1,0 +1,122 @@
+---
+title: "TidyTuesday - NASA Global Temperature Change - part two"
+date: 2023-07-13
+output: html_document
+---
+
+# Overview
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(tidytuesdayR)
+library(grid)
+```
+
+# Load the data
+
+```{r Load}
+
+tt <- tt_load("2023-07-11")
+global_temps <- tt$global_temps
+global_temps%>%head
+```
+
+
+
+```{r}
+global_temps%>%
+  select(1:13) %>%
+  summary()
+```
+
+
+```{r}
+diff <- global_temps%>%
+  select(1:13) %>%
+  pivot_longer(cols = -Year)%>%
+  #mutate(color=ifelse(value>0,"up","down"))%>%
+  group_by(Year)%>%
+  reframe(avg_val=mean(value))%>%
+  mutate(diff=c(0,diff(avg_val))*100) 
+
+diff%>% head
+```
+
+
+```{r}
+diff %>%
+  ggplot(aes(x=Year,y=diff))+
+  geom_line()+
+  geom_hline(yintercept = 0)
+```
+
+
+
+```{r}
+tag<-tibble(tag_history= c("The basic GISS temperature analysis scheme was defined in the late 1970s by James Hansen when a method of estimating global temperature change was needed for comparison with one-dimensional global climate models."))
+```
+
+```{r}
+global_temps %>%
+  select(1:13) %>% # count(Year) 1880 - 2023
+  pivot_longer(cols = -Year)%>%
+  mutate(color=ifelse(value>0,"up","down"))%>%
+  ggplot(aes(x=Year,y=value))+
+  geom_line(data=diff, 
+            mapping=aes(x=Year,y=diff),
+            inherit.aes = F,
+            linewidth=0.1,
+            linetype="dashed",
+            color="grey")+
+  geom_rect(aes(xmin=1951,xmax=1980,ymin=-7,ymax=7),
+            alpha=0.5,color="grey70")+
+  geom_col(aes(fill=color))+
+  geom_segment(aes(x=min(Year),xend=min(Year),
+                   y=0,yend=-10),
+               arrow = arrow(length = unit(0.1, "inches")),
+               color="grey70",
+               linewidth=1)+
+  geom_segment(aes(x=max(Year),xend=max(Year),
+                 y=0,yend=10),
+             arrow = arrow(length = unit(0.1, "inches")),
+             color="grey70",
+             linewidth=1)+
+  ggtext::geom_textbox(data = tag,
+                       aes(x=1920,y=-25,
+                           label = tag_history),
+              size = 3, 
+              family="Roboto Condensed",
+              width = unit(20, "line"), 
+              alpha = 0.9,
+              color="grey70",
+              fill="grey4",
+              box.colour = "grey4") +
+  annotate(geom = "text",
+       family="Roboto Condensed",
+       fontface="bold",
+       label="Global surface temperatures anomalies\n1880 - 2023",
+       size=6,
+       color="grey70",
+       hjust=0,
+       x = 1880 ,y =c(22) )+
+  ggthemes::scale_fill_fivethirtyeight()+
+  labs(title = "",
+       caption = "\nDataSource: NASA GISS Surface Temperature Analysis (GISTEMP v4)\nDataViz: #TidyTuesday 2023\n",
+       fill="Temperature")+
+  theme_void()+
+  theme(text = element_text(color="grey70",family = "Roboto Condensed",size=14),
+        legend.position = "bottom",
+        plot.caption = element_text(hjust = 0.5),
+        plot.background = element_rect(color="grey4",fill="grey4"),
+        panel.background = element_rect(color="grey4",fill="grey4"))
+
+```
+
+
+```{r}
+ggsave("images/04_tidytuesday_Global_Temps_part2.png")
+```
+
