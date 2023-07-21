@@ -14,3 +14,8 @@ tidytuesdayR::use_tidytemplate(name = "03_tidytuesday_bp.Rmd")
 tidytuesdayR::use_tidytemplate(name = "04_improving_dataviz_bp.Rmd")
 tidytuesdayR::use_tidytemplate(name = "05_time_series_bp.Rmd")
 tidytuesdayR::use_tidytemplate(name = "07_GPT detection models_bp.Rmd")
+
+tidytuesdayR::use_tidytemplate(name = "08_DataWrangling_bp.Rmd",
+                               refdate="2023-07-04")
+
+

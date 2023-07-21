@@ -15,8 +15,8 @@ knitr:
 
 This is the vector of numbers for which we are going to calculate the **measure of central tendency**, which is a set of measures classed as summary statistics.
 
-
 The vector of numbers:
+
 ```{r}
 #| echo: true
 h <- c(8.8,9.5,9.8,9.4,10,
@@ -25,19 +25,20 @@ h <- c(8.8,9.5,9.8,9.4,10,
        9.5,9.6,10.2,8.9)
 ```
 
-
 It has a length of:
+
 ```{r}
 length(h)
 ```
 
 Have a quick look at the distribution of `h` with a scatterplot using the `plot()` function:
+
 ```{r}
 plot(h)
 ```
 
-
 Load the necessary library and make it a dataframe to produce a `histogram` with {ggplot2} package:
+
 ```{r}
 library(tidyverse)
 as.data.frame(h)%>%
@@ -50,8 +51,8 @@ as.data.frame(h)%>%
 
 The `measure of central tendency` is given by the **mean**:
 
-$$\mu = \frac{\sum_{i=1}^{n=25}x_i}{n}$$
-In this case $n=25$ and the mean is:
+$$\mu = \frac{\sum_{i=1}^{n=25}x_i}{n}$$ In this case $n=25$ and the mean is:
+
 ```{r}
 mean(h)
 ```
@@ -67,10 +68,10 @@ var(h)
 The **standard deviation** is the square root of the variance:
 
 $$\sigma=\sqrt{\frac{\sum_{i=1}^{n=25}{(x_i-\hat{x})^2}}{n}}$$
+
 ```{r}
 sd(h)
 ```
-
 
 The **coefficient of variation**:
 
@@ -81,23 +82,24 @@ sd(h)/mean(h)
 ```
 
 The **95% confidence interval** for the mean:
+
 ```{r}
 se <- sd(h)/sqrt(length(h))
 se
 ```
 
-
 $$\alpha= 0.05$$
+
 ```{r}
 alpha=0.05
 ```
 
 The degree of freedom:
+
 ```{r}
 df <- length(h)-1
 df
 ```
-
 
 ```{r}
 t <- qt(p=alpha/2,
@@ -106,11 +108,9 @@ t <- qt(p=alpha/2,
 t
 ```
 
-
 ```{r}
 me <- t*se
 ```
-
 
 ```{r}
 lb<-mean(h)-me
@@ -124,11 +124,13 @@ hh<-data.frame(x=seq(1,25,1),h)
 fit<- lm(h~1,hh)
 summary(fit)
 ```
+
 Verify the values of the confidence intervals with `confint()` function:
 
 ```{r}
 confint(fit,level = 0.95)
 ```
+
 The **histogram** releases the frequencies of the provided vector.
 
 ```{r}
@@ -137,4 +139,3 @@ abline(v=mean(h),col="red")
 abline(v=lb,col="green")
 abline(v=ub,col="green")
 ```
-
