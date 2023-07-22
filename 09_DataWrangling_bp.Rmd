@@ -1,6 +1,7 @@
 ---
 title: "Data Wrangling Best Practices - Historical Markers"
-date: 2023-07-20
+subtitle: "part one"
+date: "2023-07-20"
 output: html_document
 ---
 
@@ -74,19 +75,21 @@ states%>%head
 ```
 
 ```{r}
-historical_markers%>%
+map <- historical_markers%>%
   filter(!is.na(missing))%>%
   ggplot(aes(x=longitude_minus_w,y=latitude_minus_s))+
   geom_polygon(data=states,mapping=aes(x=long,y=lat,group=group))+
   geom_point(aes(color=missing,fill=missing),
              shape=21,stroke=0.5)+
   ggthemes::theme_map()
+
+map
 ```
 
 
 ```{r}
 historical_markers%>%
-  select(title,subtitle,addl_subtitle)%>%head()%>%View
+  select(title,subtitle,addl_subtitle)%>%head()# %>%View
 ```
 
 ```{r}
@@ -99,7 +102,11 @@ historical_markers%>%
 ```{r}
 historical_markers%>%
   filter(!is.na(subtitle),!is.na(year_erected))%>%
-  select(title,subtitle,addl_subtitle,year_erected,state_or_prov)%>%
+  select(title,
+         subtitle,
+         addl_subtitle,
+         year_erected,
+         state_or_prov)%>%
   count(title,year_erected,state_or_prov,sort=T)%>%
   arrange(year_erected)
 ```
@@ -110,7 +117,9 @@ historical_markers%>%
   select(title,subtitle,addl_subtitle,year_erected,state_or_prov)%>%
   count(title,year_erected,state_or_prov,sort=T)%>%
   ggplot(aes(x=year_erected,y=n))+
-  geom_col(aes(color=state_or_prov,fill=state_or_prov),show.legend = F)
+  geom_col(aes(color=state_or_prov,fill=state_or_prov),
+           alpha=0.5,
+           show.legend = F)
 ```
 
 
@@ -132,11 +141,22 @@ titles <- df %>%
          title = gsub("[[:punct:]]","",title),
          title = gsub("[[:digit:]]","",title)) #%>%
   # sample_frac(0.01) %>% head
-  
 
-words <- str_split(titles," ") 
-  
+titles_ch <- titles$title
 ```
+
+```{r}
+titles_ch[1]
+```
+
+
+```{r}
+words <- str_split(titles," ") 
+
+words <- strsplit(titles_ch, "\\s+")[[1]]
+words
+```
+
 
 
 # Final Visualization
@@ -145,7 +165,12 @@ Using your processed dataset, create your unique visualization.
 
 ```{r Visualize}
 
-
+map+
+  labs(title="Missing Markers US Map",
+       caption = "RStudio Lab DataViz @fgazzelloni | #TidyTuesday 2023 week27")+
+  scale_color_viridis_d()+
+  theme(plot.title = element_text(size=18),
+        plot.caption = element_text(hjust = 0.5))
   
 ```
 
@@ -159,7 +184,7 @@ Save your image for sharing. Be sure to use the `#TidyTuesday` hashtag in your p
 
 # This will save your most recent plot
 ggsave(
-  filename = "08_DataWrangling_bp.png",
+  filename = "images/09_Missing_Markers_map.png",
   device = "png")
 
 ```

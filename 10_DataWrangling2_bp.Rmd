@@ -1,0 +1,97 @@
+---
+title: "Data Wrangling Best Practices - Historical Markers"
+subtitle: "part two"
+author: "fg"
+date: "2023-07-21"
+output: html_document
+---
+
+
+
+# Overview
+
+
+This second part of the Lab is all about looking at words and ngrams.
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
+
+library(tidyverse)
+library(tidytuesdayR)
+
+```
+
+
+# Load the weekly Data
+
+Download the weekly data and make available in the `tt` object.
+
+
+```{r Load}
+
+tt <- tt_load("2023-07-04")
+
+```
+
+
+# Wrangle
+
+Explore the data and process it, in order to manipulate the titles of the `historical_markers` dataset.
+```{r Wrangle}
+
+historical_markers <- tt$historical_markers
+```
+
+
+
+```{r}
+df <- historical_markers%>%
+  filter(!is.na(subtitle),!is.na(year_erected))%>%
+  select(title,subtitle,addl_subtitle,year_erected,state_or_prov)%>%
+  count(title,year_erected,state_or_prov,sort=T)
+
+df %>%
+  head
+```
+
+
+```{r}
+titles <- df %>%
+  select(title)%>%
+  mutate(title=tolower(title),
+         title = gsub("[[:punct:]]","",title),
+         title = gsub("[[:digit:]]","",title)) #%>%
+  # sample_frac(0.01) %>% head
+
+titles_ch <- titles$title
+```
+
+```{r}
+titles_ch[1]
+```
+
+
+```{r}
+words <- str_split(titles," ") 
+
+words <- strsplit(titles_ch, "\\s+")[[1]]
+words
+```
+
+```{r}
+
+word(titles_ch[1],-1)
+word(titles_ch[1],-2)
+
+paste(word(titles_ch[1],-2),word(titles_ch[1],-1))
+```
+
+```{r}
+paste(word(titles_ch[1],-3),word(titles_ch[1],-2),word(titles_ch[1],-1))
+```
+
+
+
