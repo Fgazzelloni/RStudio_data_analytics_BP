@@ -2,7 +2,6 @@
 
 
 library(tidyverse)
-# GitHub.com
 library(tidytuesdayR)
 tidytuesdayR::use_tidytemplate(name = "01_introduction_bp.Rmd",
                                refdate = "2023-05-16"
