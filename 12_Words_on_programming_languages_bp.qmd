@@ -129,7 +129,7 @@ library(tm)
 
 ```{r}
 (vs <- VectorSource(text))
-inspect(VCorpus(vs))
+# inspect(VCorpus(vs))
 ```
 
 
@@ -194,6 +194,11 @@ df %>%dim
 
 Using your processed dataset, create your unique visualization.
 
+```{r}
+library(wordcloud)
+```
+
+
 ```{r Visualize}
 set.seed(123)
 wordcloud(df$word, 
@@ -210,7 +215,9 @@ wordcloud(df$word,
 Save your image for sharing. Be sure to use the `#TidyTuesday` hashtag in your post on twitter! 
 
 ```{r}
-png("12_programming_languages_wordcloud.png", res = 180)
+#| warning: false
+#| message: false
+png("images/12_programming_languages_wordcloud.png", res = 180)
 wordcloud(df$word, 
           freq = df$freq, 
           ordered.colors = TRUE,
