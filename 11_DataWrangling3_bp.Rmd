@@ -1,6 +1,6 @@
 ---
 title: "Data Wrangling Best Practices - Historical Markers"
-subtitle: "part two"
+subtitle: "part three"
 author: "fg"
 date: "2023-07-21"
 output: html_document
@@ -105,22 +105,18 @@ wordcloud_df %>%
 
 ## Save it!
 
-Have a look at this article on Stackoverflow: <https://stackoverflow.com/questions/51759893/how-to-save-the-wordcloud-in-r>
+Have a look at this article: <https://saturncloud.io/blog/r-adding-titles-to-wordcloud-graphics-png/>
 ```{r}
-
-library(htmlwidgets)
-saveWidget(wordcloud_df %>%
-  with(wordcloud(word,
-                 freq= n,
-                 colors = n,
-                 fixed.asp = T)) ,
-  "1.html",
-  selfcontained = F)
-
-webshot::webshot("1.html","1.png",
-                 vwidth = 1992, 
-                 vheight = 1744, 
-                 delay =10)
+png("images/11_wordcloud.png",
+    pointsize = 18 )
+set.seed(000)
+wordcloud(wordcloud_df$word,
+          freq= wordcloud_df$n,
+          colors = wordcloud_df$n,
+          fixed.asp = T) 
+title(main = "Historical Markers Word's Titles",
+      sub = "RStudio Lab DataWrangling")
+dev.off()
 ```
 
 

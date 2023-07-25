@@ -151,7 +151,7 @@ titles_ch[1]
 
 
 ```{r}
-words <- str_split(titles," ") 
+# words <- str_split(titles," ") 
 
 words <- strsplit(titles_ch, "\\s+")[[1]]
 words
