@@ -16,5 +16,7 @@ tidytuesdayR::use_tidytemplate(name = "07_GPT detection models_bp.Rmd")
 
 tidytuesdayR::use_tidytemplate(name = "08_DataWrangling_bp.Rmd",
                                refdate="2023-07-04")
+tidytuesdayR::use_tidytemplate(name = "12_Words_on_programming_languages_bp.qmd",
+                               refdate="2023-03-21")
 
 

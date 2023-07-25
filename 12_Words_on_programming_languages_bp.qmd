@@ -1,0 +1,223 @@
+---
+title: "Programming Languages"
+subtile: "Have a look at the words"
+date: 2023-07-25
+output: html_document
+---
+
+# Overview
+
+
+
+```{r}
+#| include: false
+
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(tidytuesdayR)
+
+```
+
+# Load the Programming Languages Data
+
+Download the data and make available in the `tt` object.
+
+```{r Load}
+
+tt <- tt_load("2023-03-21")
+
+```
+
+
+# Readme
+
+Take a look at the readme for the weekly data to get insight on the dataset.
+This includes a data dictionary, source, and a link to an article on the data.
+
+```{r Readme}
+
+tt
+
+```
+
+
+# Glimpse Data
+
+Take an initial look at the format of the data available.
+
+```{r Glimpse}
+#| eval: false
+
+tt %>% 
+  map(glimpse)
+
+```
+
+# Wrangle
+
+Explore the data and process it into a nice format for plotting! Access each dataset by name by using a dollarsign after the `tt` object and then the name of the data set.
+
+```{r Wrangle}
+languages <- tt$languages
+
+languages%>%dim
+```
+
+```{r}
+languages%>%head
+```
+
+```{r}
+DataExplorer::profile_missing(languages)%>%
+  arrange(pct_missing)
+```
+
+```{r}
+data <- languages %>%
+  select(title,
+         type,appeared, 
+         number_of_users,
+         language_rank,
+         wikipedia_summary) 
+
+data%>%head
+```
+
+```{r}
+data %>% 
+  count(type,sort=T)%>%
+  mutate(prop=n/sum(n))
+```
+```{r}
+data%>%
+  filter(type=="pl") %>%
+  count(appeared)%>%
+  ggplot(aes(x=appeared,y=n))+
+  geom_col()+
+  labs(title="Frequency of programming languages by Year")
+  
+```
+
+
+```{r}
+data2 <- data%>%
+  filter(type=="pl",
+         !is.na(wikipedia_summary)) %>%
+  arrange(-number_of_users)%>%
+  mutate(rank_pl=row_number(),.after = number_of_users)%>%
+  slice(1:10)
+
+data2 %>% head
+```
+
+```{r}
+text<- data2$wikipedia_summary
+```
+
+```{r}
+text %>%class
+```
+
+```{r}
+text%>%nchar()
+```
+
+```{r}
+library(tm)
+```
+
+```{r}
+(vs <- VectorSource(text))
+inspect(VCorpus(vs))
+```
+
+
+```{r}
+corpus <- tm::Corpus(vs)
+corpus
+```
+```{r}
+# Clean the corpus by removing stopwords and punctuation
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
+
+```
+```{r}
+# Create a term-document matrix from the corpus
+tdm <- TermDocumentMatrix(corpus)
+```
+
+```{r}
+# Convert the term-document matrix to a matrix
+m <- as.matrix(tdm)
+
+m %>%head
+```
+
+
+```{r}
+# Get the frequency of each term in the matrix
+v <- sort(rowSums(m), decreasing = TRUE)
+```
+
+```{r}
+library(tidytext)
+```
+
+
+```{r}
+tidytext::get_sentiments("bing")%>%
+  count(sentiment)
+```
+```{r}
+data.frame(word = names(v), 
+                 freq = v) %>%dim
+```
+
+
+```{r}
+# Create a data frame with the terms and their frequency
+set.seed(1111)
+df <- data.frame(word = names(v), 
+                 freq = v) %>% 
+  inner_join(get_sentiments("bing"), by = "word") %>%  #count(sentiment)
+  mutate(
+    color = ifelse(sentiment == "positive",
+                   "#250c5f", "#cf5f26")) 
+
+df %>%dim
+```
+
+
+# Visualize
+
+Using your processed dataset, create your unique visualization.
+
+```{r Visualize}
+set.seed(123)
+wordcloud(df$word, 
+          freq = df$freq, 
+          ordered.colors = TRUE,
+          random.color = FALSE,
+          min.freq = 1,
+          scale = c(5, 0.5), 
+          colors = df$color)
+```
+
+# Save Image
+
+Save your image for sharing. Be sure to use the `#TidyTuesday` hashtag in your post on twitter! 
+
+```{r}
+png("12_programming_languages_wordcloud.png", res = 180)
+wordcloud(df$word, 
+          freq = df$freq, 
+          ordered.colors = TRUE,
+          random.color = FALSE,
+          min.freq = 1,
+          scale = c(5, 0.5), 
+          colors = df$color)
+dev.off()
+
+```
